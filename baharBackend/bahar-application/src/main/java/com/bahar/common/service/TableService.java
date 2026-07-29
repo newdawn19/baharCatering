@@ -1,0 +1,137 @@
+package com.bahar.common.service;
+
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.bahar.common.dto.cashier.HangUpDto;
+import com.bahar.common.dto.cashier.TableDetail;
+import com.bahar.common.dto.cashier.TableDto;
+import com.bahar.common.dto.system.AccountInfo;
+import com.bahar.common.param.TableParam;
+import com.bahar.common.param.TurnTableParam;
+import com.bahar.framework.pagination.PaginationRequest;
+import com.bahar.framework.pagination.PaginationResponse;
+import com.bahar.repository.model.MtTable;
+import com.bahar.framework.exception.BusinessCheckException;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * 桌码业务接口
+ *
+ * Created by FSQ
+ * CopyRight https://www.bahar.cn
+ */
+public interface TableService extends IService<MtTable> {
+
+    /**
+     * 分页查询列表
+     *
+     * @param paginationRequest
+     * @return
+     */
+    PaginationResponse<MtTable> queryTableListByPagination(PaginationRequest paginationRequest);
+
+    /**
+     * 添加桌码
+     *
+     * @param  mtTable
+     * @throws BusinessCheckException
+     * @return
+     */
+    MtTable addTable(MtTable mtTable) throws BusinessCheckException;
+
+    /**
+     * 根据ID获取桌码信息
+     *
+     * @param  id ID
+     * @return
+     */
+    MtTable queryTableById(Integer id);
+
+    /**
+     * 根据ID获取桌码信息
+     *
+     * @param storeId 店铺ID
+     * @param code 桌码
+     * @return
+     */
+    MtTable queryTableByCode(Integer storeId, String code);
+
+    /**
+     * 根据ID删除桌码
+     *
+     * @param  id ID
+     * @param  accountInfo 操作人
+     * @throws BusinessCheckException
+     * @return
+     */
+    void deleteTable(Integer id, AccountInfo accountInfo) throws BusinessCheckException;
+
+    /**
+     * 更新桌码
+     * @param  mtTable
+     * @param  accountInfo
+     * @throws BusinessCheckException
+     * @return
+     * */
+    MtTable updateTable(MtTable mtTable, AccountInfo accountInfo) throws BusinessCheckException;
+
+    /**
+     * 根据条件搜索桌码
+     *
+     * @param  params 查询参数
+     * @return
+     * */
+    List<MtTable> queryTableListByParams(Map<String, Object> params);
+
+    /**
+     * 获取挂单列表
+     *
+     * @param tableParam 请求参数
+     * @throws BusinessCheckException
+     * @return
+     * */
+    List<HangUpDto> getHangUpList(TableParam tableParam) throws BusinessCheckException;
+
+    /**
+     * 获取桌台列表
+     *
+     * @param tableParam 请求参数
+     * @return
+     * */
+    List<TableDto> getTableList(TableParam tableParam);
+
+    /**
+     * 获取桌台使用状态
+     *
+     * @param tableId 请求参数
+     * @return
+     * */
+    String getTableUseStatus(Integer tableId);
+
+    /**
+     * 更新桌台使用状态
+     *
+     * @param tableId 请求参数
+     * @param useStatus 使用状态
+     * @param useTime 使用时间
+     * @return
+     * */
+    Boolean updateUseStatus(Integer tableId, String useStatus, String useTime);
+
+    /**
+     * 获取桌台详情
+     *
+     * @param tableId 桌台ID
+     * @return
+     * */
+    TableDetail getTableDetail(Integer tableId);
+
+    /**
+     * 桌台转台
+     *
+     * @param param 请求参数
+     * @return
+     * */
+    Boolean turnTable(TurnTableParam param) throws BusinessCheckException;
+
+}

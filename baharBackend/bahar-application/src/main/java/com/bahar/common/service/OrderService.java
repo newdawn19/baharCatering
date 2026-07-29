@@ -1,0 +1,272 @@
+package com.bahar.common.service;
+
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.bahar.common.dto.order.OrderDto;
+import com.bahar.common.dto.order.UserOrderDto;
+import com.bahar.common.dto.system.AccountInfo;
+import com.bahar.common.param.OrderListParam;
+import com.bahar.common.param.RechargeParam;
+import com.bahar.common.param.RemoveGoodsParam;
+import com.bahar.common.param.SettlementParam;
+import com.bahar.framework.exception.BusinessCheckException;
+import com.bahar.framework.pagination.PaginationResponse;
+import com.bahar.repository.model.MtCart;
+import com.bahar.repository.model.MtOrder;
+import javax.servlet.http.HttpServletRequest;
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * 订单业务接口
+ *
+ * Created by FSQ
+ * CopyRight https://www.bahar.cn
+ */
+public interface OrderService extends IService<MtOrder> {
+
+    /**
+     * 获取用户的订单
+     *
+     * @param  orderListParam
+     * @return
+     * */
+    PaginationResponse getUserOrderList(OrderListParam orderListParam);
+
+    /**
+     * 创建订单
+     *
+     * @param  orderDto
+     * @throws BusinessCheckException
+     * @return
+     */
+    MtOrder saveOrder(OrderDto orderDto) throws BusinessCheckException;
+
+    /**
+     * 订单提交结算
+     *
+     * @param request 请求参数
+     * @param settlementParam 结算参数
+     * @throws BusinessCheckException
+     * @return
+     * */
+    Map<String, Object> doSettle(HttpServletRequest request, SettlementParam settlementParam) throws BusinessCheckException;
+
+    /**
+     * 获取订单详情
+     *
+     * @param  id 订单ID
+     * @return
+     */
+    MtOrder getOrderInfo(Integer id);
+
+    /**
+     * 通过桌台获取订单信息
+     *
+     * @param  tableId 桌台ID
+     * @return
+     */
+    UserOrderDto getOrderInfoByTableId(Integer tableId);
+
+    /**
+     * 清空桌台订单信息
+     *
+     * @param  tableId 桌台ID
+     * @return
+     */
+    void removeTakenTableId(Integer tableId);
+
+    /**
+     * 根据ID获取订单
+     *
+     * @param  id 订单ID
+     * @return
+     */
+    UserOrderDto getOrderById(Integer id);
+
+    /**
+     * 根据ID获取订单
+     *
+     * @param  id 订单ID
+     * @return
+     */
+    UserOrderDto getMyOrderById(Integer id);
+
+    /**
+     * 取消订单
+     *
+     * @param orderId 订单ID
+     * @param remark 取消备注
+     * @throws BusinessCheckException
+     * @return
+     * */
+    MtOrder cancelOrder(Integer orderId, String remark) throws BusinessCheckException;
+
+    /**
+     * 根据订单ID删除
+     *
+     * @param  orderId 订单ID
+     * @param  accountInfo 操作人
+     * @throws BusinessCheckException
+     * @return
+     */
+    void deleteOrder(Integer orderId, AccountInfo accountInfo) throws BusinessCheckException;
+
+    /**
+     * 根据订单号获取订单详情
+     *
+     * @param  orderSn
+     * @return
+     */
+    UserOrderDto getOrderByOrderSn(String orderSn);
+
+    /**
+     * 根据订单号获取订单详情
+     *
+     * @param orderSn 订单号
+     * @return
+     * */
+    MtOrder getOrderInfoByOrderSn(String orderSn);
+
+    /**
+     * 更新订单
+     *
+     * @param  orderDto
+     * @throws BusinessCheckException
+     * @return
+     * */
+    MtOrder updateOrder(OrderDto orderDto) throws BusinessCheckException;
+
+    /**
+     * 更新订单
+     *
+     * @param  mtOrder
+     * @return
+     * */
+    MtOrder updateOrder(MtOrder mtOrder);
+
+    /**
+     * 把订单置为已支付
+     *
+     * @param orderId
+     * @param payAmount
+     * @throws BusinessCheckException
+     * @return
+     * */
+    Boolean setOrderPayed(Integer orderId, BigDecimal payAmount) throws BusinessCheckException;
+
+    /**
+     * 根据条件搜索订单
+     *
+     * @param params 查询参数
+     * @return
+     * */
+    List<MtOrder> getOrderListByParams(Map<String, Object> params);
+
+    /**
+     * 获取订单总数
+     *
+     * @param merchantId 商户ID
+     * @param storeId 店铺ID
+     * @return
+     * */
+    BigDecimal getOrderCount(Integer merchantId, Integer storeId);
+
+    /**
+     * 获取订单数量
+     *
+     * @param merchantId 商户ID
+     * @param storeId 店铺ID
+     * @param beginTime 开始时间
+     * @param endTime 结束时间
+     * @return
+     * */
+    BigDecimal getOrderCount(Integer merchantId, Integer storeId, Date beginTime, Date endTime);
+
+    /**
+     * 计算购物车
+     *
+     * @param merchantId 商户ID
+     * @param userId 会员ID
+     * @param cartList 购物车列表
+     * @param couponId 使用的卡券ID
+     * @param isUsePoint 是否使用积分抵扣
+     * @param platform 平台 h5
+     * @param orderMode 订单模式，自取或配送
+     * @param couponIds 多张卡券ID，逗号分隔
+     * @return
+     * */
+    Map<String, Object> calculateCartGoods(Integer merchantId, Integer userId, List<MtCart> cartList, Integer couponId, boolean isUsePoint, String platform, String orderMode, String couponIds);
+
+    /**
+     * 获取支付金额
+     *
+     * @param merchantId 商户ID
+     * @param storeId 店铺ID
+     * @param beginTime 开始时间
+     * @param endTime 结束时间
+     * @return
+     * */
+    BigDecimal getPayMoney(Integer merchantId, Integer storeId, Date beginTime, Date endTime);
+
+    /**
+     * 获取支付人数
+     *
+     * @param merchantId 商户ID
+     * @param storeId 店铺ID
+     * @return
+     * */
+    Integer getPayUserCount(Integer merchantId, Integer storeId);
+
+    /**
+     * 获取支付金额
+     *
+     * @param merchantId 商户ID
+     * @param storeId 店铺ID
+     * @return
+     * */
+    BigDecimal getPayMoney(Integer merchantId, Integer storeId);
+
+    /**
+     * 获取会员支付金额
+     *
+     * @param userId 会员IDs
+     * @return
+     * */
+    BigDecimal getUserPayMoney(Integer userId);
+
+    /**
+     * 获取会员订单数
+     *
+     * @param userId 会员ID
+     * @return
+     * */
+    Integer getUserPayOrderCount(Integer userId);
+
+    /**
+     * 获取等待分佣的订单列表
+     *
+     * @param dateTime 时间
+     * @return
+     * */
+    List<MtOrder> getTobeCommissionOrderList(String dateTime);
+
+    /**
+     * 提交充值订单
+     *
+     * @param rechargeParam 充值参数
+     * @throws BusinessCheckException
+     * @return
+     * */
+    MtOrder doRecharge(HttpServletRequest request, RechargeParam rechargeParam) throws BusinessCheckException;
+
+    /**
+     * 取消订单商品
+     *
+     * @param removeGoodsParam 请求参数
+     * @return
+     * */
+    Boolean removeGoods(RemoveGoodsParam removeGoodsParam) throws BusinessCheckException;
+
+}

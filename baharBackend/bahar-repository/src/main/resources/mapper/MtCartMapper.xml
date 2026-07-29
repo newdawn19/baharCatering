@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bahar.repository.mapper.MtCartMapper">
+    <delete id="deleteCartItem">
+        delete from mt_cart where USER_ID = #{userId} and GOODS_ID = #{goodsId} and SKU_ID = #{skuId}
+    </delete>
+
+    <delete id="clearCart">
+        delete from mt_cart where USER_ID = #{userId}
+    </delete>
+
+    <delete id="deleteCartByTableId">
+        delete from mt_cart where TABLE_ID = #{tableId}
+    </delete>
+
+    <update id="turnTable">
+        update mt_cart set TABLE_ID = #{tableId} where TABLE_ID = #{turnTableId}
+    </update>
+</mapper>

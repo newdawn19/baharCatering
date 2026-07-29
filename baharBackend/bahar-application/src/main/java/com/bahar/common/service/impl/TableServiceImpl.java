@@ -1,0 +1,467 @@
+package com.bahar.common.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.bahar.common.dto.cashier.HangUpDto;
+import com.bahar.common.dto.cashier.TableDetail;
+import com.bahar.common.dto.cashier.TableDto;
+import com.bahar.common.dto.order.UserOrderDto;
+import com.bahar.common.dto.system.AccountInfo;
+import com.bahar.common.enums.*;
+import com.bahar.common.param.TableParam;
+import com.bahar.common.param.TurnTableParam;
+import com.bahar.common.service.CartService;
+import com.bahar.common.service.MemberService;
+import com.bahar.common.service.OrderService;
+import com.bahar.common.service.TableService;
+import com.bahar.common.util.DateUtil;
+import com.bahar.common.util.TimeUtil;
+import com.bahar.framework.annoation.OperationServiceLog;
+import com.bahar.framework.exception.BusinessCheckException;
+import com.bahar.framework.pagination.PaginationRequest;
+import com.bahar.framework.pagination.PaginationResponse;
+import com.bahar.repository.mapper.MtTableMapper;
+import com.bahar.repository.model.MtCart;
+import com.bahar.repository.model.MtOrder;
+import com.bahar.repository.model.MtTable;
+import com.bahar.repository.model.MtUser;
+import com.bahar.utils.StringUtil;
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
+import lombok.AllArgsConstructor;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * 桌码服务接口
+ *
+ * Created by FSQ
+ * CopyRight https://www.bahar.cn
+ */
+@Service
+@AllArgsConstructor(onConstructor_= {@Lazy})
+public class TableServiceImpl extends ServiceImpl<MtTableMapper, MtTable> implements TableService {
+
+    private static final Logger logger = LoggerFactory.getLogger(TableServiceImpl.class);
+
+    private MtTableMapper mtTableMapper;
+
+    /**
+     * 购物车服务接口
+     * */
+    private CartService cartService;
+
+    /**
+     * 订单服务接口
+     * */
+    private OrderService orderService;
+
+    /**
+     * 会员服务接口
+     */
+    private MemberService memberService;
+
+    /**
+     * 分页查询数据列表
+     *
+     * @param paginationRequest
+     * @return
+     */
+    @Override
+    public PaginationResponse<MtTable> queryTableListByPagination(PaginationRequest paginationRequest) {
+        Page<MtTable> pageHelper = PageHelper.startPage(paginationRequest.getCurrentPage(), paginationRequest.getPageSize());
+        LambdaQueryWrapper<MtTable> lambdaQueryWrapper = Wrappers.lambdaQuery();
+        lambdaQueryWrapper.ne(MtTable::getStatus, StatusEnum.DISABLE.getKey());
+
+        String merchantId = paginationRequest.getSearchParams().get("merchantId") == null ? "" : paginationRequest.getSearchParams().get("merchantId").toString();
+        if (StringUtils.isNotBlank(merchantId)) {
+            lambdaQueryWrapper.eq(MtTable::getMerchantId, merchantId);
+        }
+        String storeId = paginationRequest.getSearchParams().get("storeId") == null ? "" : paginationRequest.getSearchParams().get("storeId").toString();
+        if (StringUtils.isNotBlank(storeId)) {
+            lambdaQueryWrapper.eq(MtTable::getStoreId, storeId);
+        }
+
+        String code = paginationRequest.getSearchParams().get("code") == null ? "" : paginationRequest.getSearchParams().get("code").toString();
+        if (StringUtils.isNotBlank(code)) {
+            lambdaQueryWrapper.eq(MtTable::getCode, code);
+        }
+        String status = paginationRequest.getSearchParams().get("status") == null ? "" : paginationRequest.getSearchParams().get("status").toString();
+        if (StringUtils.isNotBlank(status)) {
+            lambdaQueryWrapper.eq(MtTable::getStatus, status);
+        }
+
+        lambdaQueryWrapper.orderByAsc(MtTable::getSort);
+        List<MtTable> dataList = mtTableMapper.selectList(lambdaQueryWrapper);
+
+        PageRequest pageRequest = PageRequest.of(paginationRequest.getCurrentPage(), paginationRequest.getPageSize());
+        PageImpl pageImpl = new PageImpl(dataList, pageRequest, pageHelper.getTotal());
+        PaginationResponse<MtTable> paginationResponse = new PaginationResponse(pageImpl, MtTable.class);
+        paginationResponse.setTotalPages(pageHelper.getPages());
+        paginationResponse.setTotalElements(pageHelper.getTotal());
+        paginationResponse.setContent(dataList);
+
+        return paginationResponse;
+    }
+
+    /**
+     * 添加桌码
+     *
+     * @param mtTable 桌码信息
+     * @return
+     */
+    @Override
+    @OperationServiceLog(description = "新增桌码")
+    public MtTable addTable(MtTable mtTable) throws BusinessCheckException {
+        mtTable.setStatus(StatusEnum.ENABLED.getKey());
+        mtTable.setUpdateTime(new Date());
+        mtTable.setCreateTime(new Date());
+        MtTable tableInfo = queryTableByCode(mtTable.getStoreId(), mtTable.getCode());
+        if (tableInfo != null ) {
+            throw new BusinessCheckException("桌码已经存在，新增失败");
+        }
+
+        Integer id = mtTableMapper.insert(mtTable);
+        if (id > 0) {
+            return mtTable;
+        } else {
+            logger.error("新增桌码数据失败，mtTable：{}", mtTable);
+            throw new BusinessCheckException("新增桌码数据失败");
+        }
+    }
+
+    /**
+     * 根据ID获桌码取息
+     *
+     * @param id 桌码ID
+     * @return
+     */
+    @Override
+    public MtTable queryTableById(Integer id) {
+        return mtTableMapper.selectById(id);
+    }
+
+    /**
+     * 根据桌码获取桌码信息
+     *
+     * @param storeId 店铺ID
+     * @param code 桌码
+     * @throws BusinessCheckException
+     * @return
+     */
+    public MtTable queryTableByCode(Integer storeId, String code) {
+        return mtTableMapper.queryTableByTableCode(storeId, code);
+    }
+
+    /**
+     * 根据ID删除桌码
+     *
+     * @param id 桌码ID
+     * @param accountInfo 操作人
+     * @return
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @OperationServiceLog(description = "删除桌码")
+    public void deleteTable(Integer id, AccountInfo accountInfo) throws BusinessCheckException {
+        MtTable mtTable = queryTableById(id);
+        if (null == mtTable) {
+            throw new BusinessCheckException("该桌码不存在");
+        }
+        mtTable.setStatus(StatusEnum.DISABLE.getKey());
+        mtTable.setUpdateTime(new Date());
+        mtTableMapper.updateById(mtTable);
+    }
+
+    /**
+     * 修改桌码数据
+     *
+     * @param  mtTable
+     * @param  accountInfo
+     * @throws BusinessCheckException
+     * @return
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @OperationServiceLog(description = "更新桌码")
+    public MtTable updateTable(MtTable mtTable, AccountInfo accountInfo) throws BusinessCheckException {
+        MtTable table = queryTableById(mtTable.getId());
+        if (table == null) {
+            throw new BusinessCheckException("该桌码状态异常");
+        }
+        if (!table.getMerchantId().equals(accountInfo.getMerchantId())) {
+            throw new BusinessCheckException("不同商户，无操作权限");
+        }
+        MtTable tableInfo = queryTableByCode(mtTable.getStoreId(), mtTable.getCode());
+        if (tableInfo != null && !table.getId().equals(tableInfo.getId())) {
+            throw new BusinessCheckException("桌码已经存在，更新失败");
+        }
+        if (mtTable.getCode() != null) {
+            table.setCode(mtTable.getCode());
+        }
+        if (mtTable.getStoreId() != null) {
+            table.setStoreId(mtTable.getStoreId());
+        }
+        if (mtTable.getDescription() != null) {
+            table.setDescription(mtTable.getDescription());
+        }
+        if (mtTable.getMaxPeople() != null) {
+            table.setMaxPeople(mtTable.getMaxPeople());
+        }
+        if (mtTable.getStatus() != null) {
+            table.setStatus(mtTable.getStatus());
+        }
+        if (mtTable.getUseStatus() != null) {
+            table.setUseStatus(mtTable.getUseStatus());
+        }
+        if (mtTable.getUpdateTime() != null && table.getUseTime() == null) {
+            table.setUseTime(mtTable.getUpdateTime());
+        }
+        if (mtTable.getSort() != null) {
+            table.setSort(mtTable.getSort());
+        }
+        if (mtTable.getOperator() != null) {
+            table.setOperator(mtTable.getOperator());
+        }
+        table.setUpdateTime(new Date());
+        mtTableMapper.updateById(table);
+        return mtTable;
+    }
+
+   /**
+    * 根据条件搜索桌码
+    *
+    * @param params 查询参数
+    * @throws BusinessCheckException
+    * @return
+    * */
+    @Override
+    public List<MtTable> queryTableListByParams(Map<String, Object> params) {
+        String status =  params.get("status") == null ? StatusEnum.ENABLED.getKey(): params.get("status").toString();
+        String storeId =  params.get("storeId") == null ? "" : params.get("storeId").toString();
+        String merchantId =  params.get("merchantId") == null ? "" : params.get("merchantId").toString();
+        String code =  params.get("code") == null ? "" : params.get("code").toString();
+        String useStatus =  params.get("useStatus") == null ? "" : params.get("useStatus").toString();
+
+        LambdaQueryWrapper<MtTable> lambdaQueryWrapper = Wrappers.lambdaQuery();
+        lambdaQueryWrapper.ne(MtTable::getStatus, StatusEnum.DISABLE.getKey());
+        if (StringUtils.isNotBlank(code)) {
+            lambdaQueryWrapper.eq(MtTable::getCode, code);
+        }
+        if (StringUtils.isNotBlank(status)) {
+            lambdaQueryWrapper.eq(MtTable::getStatus, status);
+        }
+        if (StringUtils.isNotBlank(useStatus)) {
+            lambdaQueryWrapper.eq(MtTable::getUseStatus, useStatus);
+        }
+        if (StringUtils.isNotBlank(merchantId)) {
+            lambdaQueryWrapper.eq(MtTable::getMerchantId, merchantId);
+        }
+        if (StringUtils.isNotBlank(storeId)) {
+            lambdaQueryWrapper.eq(MtTable::getStoreId, storeId);
+        }
+
+        lambdaQueryWrapper.orderByAsc(MtTable::getSort);
+        return mtTableMapper.selectList(lambdaQueryWrapper);
+    }
+
+    /**
+     * 获取挂单列表
+     *
+     * @param tableParam 请求参数
+     * @throws BusinessCheckException
+     * @return
+     */
+    @Override
+    public List<HangUpDto> getHangUpList(TableParam tableParam) throws BusinessCheckException {
+        List<MtTable> tableList = mtTableMapper.getActiveTableList(tableParam.getMerchantId(), tableParam.getStoreId());
+        List<HangUpDto> dataList = new ArrayList<>();
+        for (MtTable mtTable : tableList) {
+            List<MtCart> cartList = cartService.getCartByTableId(mtTable.getId());
+            HangUpDto hangUpDto = new HangUpDto();
+            hangUpDto.setIsEmpty(false);
+            String useStatus = getTableUseStatus(mtTable.getId());
+            if (cartList.size() > 0) {
+                Integer userId = cartList.get(0).getUserId();
+                String isVisitor = cartList.get(0).getIsVisitor();
+                Map<String, Object> cartInfo = orderService.calculateCartGoods(tableParam.getMerchantId(), userId, cartList, 0, false, PlatformTypeEnum.PC.getCode(), OrderModeEnum.ONESELF.getKey(), null);
+                hangUpDto.setNum(Double.parseDouble(cartInfo.get("totalNum").toString()));
+                hangUpDto.setAmount(new BigDecimal(cartInfo.get("totalPrice").toString()));
+                if (isVisitor.equals(YesOrNoEnum.NO.getKey())) {
+                    MtUser userInfo = memberService.queryMemberById(userId);
+                    hangUpDto.setMemberInfo(userInfo);
+                }
+                String dateTime = DateUtil.formatDate(cartList.get(0).getUpdateTime(), "yyyy-MM-dd HH:mm:ss");
+                hangUpDto.setDateTime(dateTime);
+            }
+            mtTable.setUseStatus(useStatus);
+            hangUpDto.setTableInfo(mtTable);
+            if (useStatus.equals(TableUseStatusEnum.AVAILABLE.getKey())) {
+                hangUpDto.setIsEmpty(true);
+            }
+            hangUpDto.setUseStatus(useStatus);
+            hangUpDto.setUseTime(TimeUtil.getMealTime(mtTable.getUseTime(), new Date()));
+            hangUpDto.setTableId(mtTable.getId());
+            hangUpDto.setTableCode(mtTable.getCode());
+            dataList.add(hangUpDto);
+        }
+        return dataList;
+    }
+
+    /**
+     * 获取挂单列表
+     *
+     * @param  tableParam 请求参数
+     * @throws BusinessCheckException
+     * @return
+     */
+    @Override
+    public List<TableDto> getTableList(TableParam tableParam) {
+        List<MtTable> tableList = mtTableMapper.getActiveTableList(tableParam.getMerchantId(), tableParam.getStoreId());
+        List<TableDto> dataList = new ArrayList<>();
+        for (MtTable mtTable : tableList) {
+             UserOrderDto orderInfo = orderService.getOrderInfoByTableId(mtTable.getId());
+             TableDto tableDto = new TableDto();
+             tableDto.setIsEmpty(false);
+             String useStatus = getTableUseStatus(mtTable.getId());
+             if (orderInfo != null) {
+                 if (orderInfo.getGoods() != null) {
+                     tableDto.setNum(orderInfo.getGoods().size());
+                 } else {
+                     tableDto.setNum(1);
+                 }
+                 tableDto.setAmount(orderInfo.getAmount());
+                 if (orderInfo.getIsVisitor().equals(YesOrNoEnum.NO.getKey())) {
+                     MtUser userInfo = memberService.queryMemberById(orderInfo.getUserId());
+                     tableDto.setMemberInfo(userInfo);
+                 }
+                 tableDto.setDateTime(orderInfo.getCreateTime());
+             }
+             if (useStatus.equals(TableUseStatusEnum.AVAILABLE.getKey())) {
+                 tableDto.setIsEmpty(true);
+             }
+             mtTable.setUseStatus(useStatus);
+             tableDto.setTableInfo(mtTable);
+             tableDto.setUseStatus(useStatus);
+             tableDto.setUseTime(TimeUtil.getMealTime(mtTable.getUseTime(), new Date()));
+             tableDto.setTableId(mtTable.getId());
+             tableDto.setTableCode(mtTable.getCode());
+             dataList.add(tableDto);
+        }
+        return dataList;
+    }
+
+    /**
+     * 获取桌台使用状态
+     *
+     * @param tableId 请求参数
+     * @return
+     * */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public String getTableUseStatus(Integer tableId) {
+       MtTable table = queryTableById(tableId);
+       List<MtCart> carts = cartService.getCartByTableId(tableId);
+       UserOrderDto orderInfo = orderService.getOrderInfoByTableId(tableId);
+
+        // 默认空闲中
+       String useStatus = TableUseStatusEnum.AVAILABLE.getKey();
+       String useTime = "";
+       // 订单存在，表示就餐中
+       if (orderInfo != null) {
+           useStatus = TableUseStatusEnum.DURING.getKey();
+           useTime = DateUtil.formatDate(table.getUseTime(), "yyyy-MM-dd HH:mm:ss");
+       }
+
+       // 购物车存在，表示已开台
+       else if (carts != null && carts.size() > 0) {
+           useStatus = TableUseStatusEnum.TAKEN.getKey();
+           useTime = DateUtil.formatDate(table.getUseTime(), "yyyy-MM-dd HH:mm:ss");
+       }
+
+       if (!table.getUseStatus().equals(useStatus)) {
+           updateUseStatus(tableId, useStatus, useTime);
+       }
+       return useStatus;
+    }
+
+    /**
+     * 更新桌台使用状态
+     *
+     * @param tableId 桌台ID
+     * @param useStatus 使用状态
+     * @param useTime 开台时间
+     * @return
+     * */
+    @Override
+    public Boolean updateUseStatus(Integer tableId, String useStatus, String useTime) {
+        MtTable table = queryTableById(tableId);
+        // 就餐状态不能转成已开台
+        if (table.getUseStatus().equals(TableUseStatusEnum.DURING.getKey()) && useStatus.equals(TableUseStatusEnum.TAKEN.getKey())) {
+            return true;
+        }
+        mtTableMapper.updateUseStatus(tableId, useStatus, (StringUtil.isBlank(useTime) ? null : useTime));
+        return false;
+    }
+
+    /**
+     * 获取桌台详情
+     *
+     * @param tableId 桌台ID
+     * @return
+     * */
+    @Override
+    public TableDetail getTableDetail(Integer tableId) {
+        UserOrderDto orderInfo = orderService.getOrderInfoByTableId(tableId);
+        TableDetail tableDetail = new TableDetail();
+        tableDetail.setOrderInfo(orderInfo);
+        MtTable mtTable = queryTableById(tableId);
+        tableDetail.setTableCode(mtTable.getCode());
+        tableDetail.setTableId(tableId);
+        return tableDetail;
+    }
+
+    /**
+     * 桌台转台
+     *
+     * @param param 请求参数
+     * @return
+     * */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean turnTable(TurnTableParam param) throws BusinessCheckException {
+       String useStatus = getTableUseStatus(param.getTableId());
+       if (!useStatus.equals(TableUseStatusEnum.AVAILABLE.getKey())) {
+           throw new BusinessCheckException("转台失败，桌台已被占用");
+       }
+       UserOrderDto orderInfo = orderService.getOrderInfoByTableId(param.getTurnTableId());
+       if (orderInfo == null) {
+           throw new BusinessCheckException("转台失败，订单不存在");
+       }
+
+       // 转移订单
+       MtOrder mtOrder = orderService.getOrderInfo(orderInfo.getId());
+       mtOrder.setTableId(param.getTableId());
+       mtOrder.setTakenTableId(param.getTableId());
+       orderService.updateOrder(mtOrder);
+
+       // 转移购物车
+       cartService.turnTable(param.getTableId(), param.getTurnTableId());
+
+       updateUseStatus(param.getTableId(), TableUseStatusEnum.AVAILABLE.getKey(), null);
+       return true;
+    }
+}

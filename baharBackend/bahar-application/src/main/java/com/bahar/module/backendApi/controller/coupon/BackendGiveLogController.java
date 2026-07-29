@@ -1,0 +1,178 @@
+package com.bahar.module.backendApi.controller.coupon;
+
+import com.bahar.common.Constants;
+import com.bahar.common.dto.coupon.GiveDto;
+import com.bahar.common.dto.coupon.GiveItemDto;
+import com.bahar.common.dto.system.AccountInfo;
+import com.bahar.common.enums.StatusEnum;
+import com.bahar.common.param.GivePage;
+import com.bahar.common.service.GiveService;
+import com.bahar.common.util.CommonUtil;
+import com.bahar.common.util.ExcelUtil;
+import com.bahar.common.util.TokenUtil;
+import com.bahar.common.util.XlsUtil;
+import com.bahar.framework.exception.BusinessCheckException;
+import com.bahar.framework.pagination.PaginationResponse;
+import com.bahar.framework.web.BaseController;
+import com.bahar.framework.web.ResponseObject;
+import com.bahar.repository.mapper.MtCouponGroupMapper;
+import com.bahar.repository.mapper.MtCouponMapper;
+import com.bahar.repository.mapper.MtUserCouponMapper;
+import com.bahar.repository.model.*;
+import com.bahar.utils.StringUtil;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import lombok.AllArgsConstructor;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static com.bahar.common.util.XlsUtil.objectConvertToString;
+
+/**
+ * 转赠管理类controller
+ *
+ * Created by FSQ
+ * CopyRight https://www.bahar.cn
+ */
+@Api(tags="管理端-转赠相关接口")
+@RestController
+@AllArgsConstructor
+@RequestMapping(value = "/backendApi/give")
+public class BackendGiveLogController extends BaseController {
+
+    private MtUserCouponMapper mtUserCouponMapper;
+
+    private MtCouponGroupMapper mtCouponGroupMapper;
+
+    private MtCouponMapper mtCouponMapper;
+
+    /**
+     * 转赠服务接口
+     */
+    private GiveService giveService;
+
+    /**
+     * 查询转赠列表
+     */
+    @ApiOperation(value = "查询转赠列表")
+    @RequestMapping(value = "/list", method = RequestMethod.GET)
+    @CrossOrigin
+    public ResponseObject list(@ModelAttribute GivePage givePage) throws BusinessCheckException {
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
+
+        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
+            givePage.setMerchantId(accountInfo.getMerchantId());
+        }
+        if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
+            givePage.setStoreId(accountInfo.getStoreId());
+        }
+        PaginationResponse<GiveDto> paginationResponse = giveService.queryGiveListByPagination(givePage);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("paginationResponse", paginationResponse);
+
+        return getSuccessResult(result);
+    }
+
+    /**
+     * 查询转赠详情
+     */
+    @ApiOperation(value = "查询转赠详情")
+    @RequestMapping(value = "/giveItem", method = RequestMethod.GET)
+    @CrossOrigin
+    public ResponseObject giveItem(HttpServletRequest request) {
+        String giveId = request.getParameter("giveId");
+        if (StringUtil.isEmpty(giveId)) {
+            return getFailureResult(201, "参数有误");
+        }
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("status", StatusEnum.ENABLED.getKey());
+        params.put("GIVE_ID", giveId);
+
+        List<MtGiveItem> itemList = giveService.queryItemByParams(params);
+
+        List<GiveItemDto> dataList = new ArrayList<>();
+        for (MtGiveItem item : itemList) {
+            MtGive giveInfo = giveService.queryGiveById(Long.parseLong(giveId));
+            MtUserCoupon userCouponInfo = mtUserCouponMapper.selectById(item.getUserCouponId());
+            if (userCouponInfo != null) {
+                MtCouponGroup groupInfo = mtCouponGroupMapper.selectById(userCouponInfo.getGroupId());
+                MtCoupon couponInfo = mtCouponMapper.selectById(userCouponInfo.getCouponId());
+                if (groupInfo != null && couponInfo != null) {
+                    GiveItemDto giveItem = new GiveItemDto();
+                    giveItem.setId(item.getId());
+                    giveItem.setMobile(CommonUtil.hidePhone(giveInfo.getUserMobile()));
+                    giveItem.setUserMobile(CommonUtil.hidePhone(giveInfo.getUserMobile()));
+                    giveItem.setGroupId(userCouponInfo.getGroupId());
+                    giveItem.setGroupName(groupInfo.getName());
+                    giveItem.setCouponId(userCouponInfo.getCouponId());
+                    giveItem.setCouponName(couponInfo.getName());
+                    giveItem.setMoney(userCouponInfo.getAmount());
+                    giveItem.setCreateTime(item.getCreateTime());
+                    dataList.add(giveItem);
+                }
+            }
+        }
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("itemList", dataList);
+
+        return getSuccessResult(resultMap);
+    }
+
+    /**
+     * 导出转赠记录
+     */
+    @ApiOperation(value = "导出转赠记录")
+    @RequestMapping(value = "/export", method = RequestMethod.GET)
+    @ResponseBody
+    public void export(HttpServletRequest request, HttpServletResponse response) {
+        GivePage givePage = new GivePage();
+        givePage.setPage(Constants.PAGE_NUMBER);
+        givePage.setPageSize(Constants.MAX_ROWS);
+        PaginationResponse<GiveDto> paginationResponse = giveService.queryGiveListByPagination(givePage);
+        List<GiveDto> list = paginationResponse.getContent();
+
+        // excel标题
+        String[] title = { "记录ID", "用户手机号", "转赠数量", "转赠总金额", "赠予对象手机号", "赠予时间" };
+        String fileName = "转赠记录" + System.currentTimeMillis() + ".xls";
+
+        String[][] content = null;
+        if (list.size() > 0) {
+            content= new String[list.size()][title.length];
+        }
+
+        for (int i = 0; i < list.size(); i++) {
+             GiveDto obj = list.get(i);
+             content[i][0] = objectConvertToString(obj.getId());
+             content[i][1] = objectConvertToString(obj.getUserMobile());
+             content[i][2] = objectConvertToString(obj.getNum());
+             content[i][3] = objectConvertToString(obj.getMoney());
+             content[i][4] = objectConvertToString(obj.getMobile());
+             content[i][5] = objectConvertToString(obj.getCreateTime());
+        }
+
+        // 创建HSSFWorkbook
+        HSSFWorkbook wb = ExcelUtil.getHSSFWorkbook("转赠记录", title, content, null);
+
+        // 响应到客户端
+        try {
+            XlsUtil.setXlsHeader(request, response, fileName);
+            OutputStream os = response.getOutputStream();
+            wb.write(os);
+            os.flush();
+            os.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}

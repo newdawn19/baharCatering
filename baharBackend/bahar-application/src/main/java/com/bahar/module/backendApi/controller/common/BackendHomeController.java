@@ -1,0 +1,139 @@
+package com.bahar.module.backendApi.controller.common;
+
+import com.bahar.common.dto.order.UserOrderDto;
+import com.bahar.common.dto.system.AccountInfo;
+import com.bahar.common.service.MemberService;
+import com.bahar.common.service.OrderService;
+import com.bahar.common.service.ReportService;
+import com.bahar.common.util.DateUtil;
+import com.bahar.common.util.TokenUtil;
+import com.bahar.framework.exception.BusinessCheckException;
+import com.bahar.framework.web.BaseController;
+import com.bahar.framework.web.ResponseObject;
+import com.bahar.utils.StringUtil;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import lombok.AllArgsConstructor;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.servlet.http.HttpServletRequest;
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * 首页控制器
+ *
+ * Created by FSQ
+ * CopyRight https://www.bahar.cn
+ */
+@Api(tags="管理端-首页相关接口")
+@RestController
+@AllArgsConstructor
+@RequestMapping(value = "/backendApi/home")
+public class BackendHomeController extends BaseController {
+
+    /**
+     * 会员服务接口
+     * */
+    private MemberService memberService;
+
+    /**
+     * 订单服务接口
+     * */
+    private OrderService orderService;
+
+    /**
+     * 报表服务接口
+     * */
+    private ReportService reportService;
+
+    /**
+     * 首页统计数据
+     */
+    @ApiOperation(value = "首页统计数据")
+    @RequestMapping(value = "/index", method = RequestMethod.GET)
+    @CrossOrigin
+    public ResponseObject index() throws BusinessCheckException {
+        Date beginTime = DateUtil.getDayBegin();
+        Date endTime = DateUtil.getDayEnd();
+
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
+
+        Integer merchantId = accountInfo.getMerchantId();
+        Integer storeId = accountInfo.getStoreId();
+
+        // 总会员数
+        Long totalUser = memberService.getUserCount(merchantId, storeId);
+        // 今日新增会员数量
+        Long todayUser = memberService.getUserCount(merchantId, storeId, beginTime, endTime);
+
+        // 总订单数
+        BigDecimal totalOrder = orderService.getOrderCount(merchantId, storeId);
+        // 今日订单数
+        BigDecimal todayOrder = orderService.getOrderCount(merchantId, storeId, beginTime, endTime);
+
+        // 今日交易金额
+        BigDecimal todayPay = orderService.getPayMoney(merchantId, storeId, beginTime, endTime);
+        // 总交易金额
+        BigDecimal totalPay = orderService.getPayMoney(merchantId, storeId);
+
+        // 今日活跃会员数
+        Long todayActiveUser = memberService.getActiveUserCount(merchantId, storeId, beginTime, endTime);
+
+        // 总支付人数
+        Integer totalPayUser = orderService.getPayUserCount(merchantId, storeId);
+
+        Map<String, Object> result = new HashMap<>();
+
+        result.put("todayUser", todayUser);
+        result.put("totalUser", totalUser);
+        result.put("todayOrder", todayOrder);
+        result.put("totalOrder", totalOrder);
+        result.put("todayPay", todayPay);
+        result.put("totalPay", totalPay);
+        result.put("todayActiveUser", todayActiveUser);
+        result.put("totalPayUser", totalPayUser);
+
+        return getSuccessResult(result);
+    }
+
+    /**
+     * 首页图表统计数据
+     */
+    @ApiOperation(value = "首页图表统计数据")
+    @RequestMapping(value = "/statistic", method = RequestMethod.GET)
+    @CrossOrigin
+    public ResponseObject statistic(HttpServletRequest request) {
+        String tag = request.getParameter("tag") == null ? "order,user_active" : request.getParameter("tag");
+        Integer storeId = StringUtil.isEmpty(request.getParameter("storeId")) ? 0 : Integer.parseInt(request.getParameter("storeId"));
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
+        Integer merchantId = accountInfo.getMerchantId() == null ? 0 : accountInfo.getMerchantId();
+        if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
+            storeId = accountInfo.getStoreId();
+        }
+        Map<String, Object> result = reportService.getChartData(tag, merchantId, storeId);
+        return getSuccessResult(result);
+    }
+
+    /**
+     * 获取收款结果
+     */
+    @ApiOperation(value = "获取收款结果")
+    @RequestMapping(value = "/cashierResult", method = RequestMethod.GET)
+    @CrossOrigin
+    public ResponseObject cashierResult(HttpServletRequest request) {
+        Integer orderId = request.getParameter("orderId") == null ? 0 : Integer.parseInt(request.getParameter("orderId"));
+
+        UserOrderDto orderInfo = orderService.getOrderById(orderId);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("orderInfo", orderInfo);
+
+        return getSuccessResult(result);
+    }
+}
