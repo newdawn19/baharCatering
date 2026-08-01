@@ -32,6 +32,19 @@
             <groupId>org.springframework.ws</groupId>
             <artifactId>spring-ws-core</artifactId>
         </dependency>
+        <!-- SAAJ / javax.xml.soap：Java 11+ 已从 JDK 移除，IDE 当前用 JDK 17，Spring-WS 必须显式引入。
+             必须用 javax 命名的 saaj-impl 1.4.0（1.5.x 已迁移到 jakarta.xml.soap，与 Spring Boot 2.7 的 javax 命名不兼容）。
+             注意：若把工程 SDK 切回 JDK 8 运行，可删除下面两个依赖（JDK8 自带 javax.xml.soap）。 -->
+        <dependency>
+            <groupId>javax.xml.soap</groupId>
+            <artifactId>javax.xml.soap-api</artifactId>
+            <version>1.4.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.xml.messaging.saaj</groupId>
+            <artifactId>saaj-impl</artifactId>
+            <version>1.4.0</version>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
@@ -73,6 +86,11 @@
         </dependency>
 
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus</artifactId>
             <version>${mybatis-plus.version}</version>
@@ -87,7 +105,19 @@
                     <groupId>org.mybatis</groupId>
                     <artifactId>mybatis</artifactId>
                 </exclusion>
+                <!-- pagehelper 1.2.5 会传递引入 jsqlparser 1.0，与 MyBatis-Plus 3.5.x 不兼容，排除后由下方显式 4.6 接管 -->
+                <exclusion>
+                    <groupId>com.github.jsqlparser</groupId>
+                    <artifactId>jsqlparser</artifactId>
+                </exclusion>
             </exclusions>
+        </dependency>
+
+        <!-- 显式引入兼容的 JSqlParser 版本（MyBatis-Plus 3.5.x 分页插件需要 4.x 的 withColumnName API） -->
+        <dependency>
+            <groupId>com.github.jsqlparser</groupId>
+            <artifactId>jsqlparser</artifactId>
+            <version>4.6</version>
         </dependency>
 
         <dependency>
