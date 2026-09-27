@@ -99,13 +99,16 @@
         <dependency>
             <groupId>com.github.pagehelper</groupId>
             <artifactId>pagehelper-spring-boot-starter</artifactId>
-            <version>1.2.5</version>
+            <!-- 必须对齐其它三套工程的 1.4.7（内含 pagehelper 5.3.3）。
+                 旧版 1.2.5(pagehelper 5.1.4) 调用的是 jsqlparser 1.x 的
+                 PlainSelect.getGroupByColumnReferences()，与 jsqlparser 4.6 不匹配，
+                 运行时会抛 NoSuchMethodError —— 仅替换依赖版本无法修复，必须升级 pagehelper 本身 -->
+            <version>1.4.7</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.mybatis</groupId>
                     <artifactId>mybatis</artifactId>
                 </exclusion>
-                <!-- pagehelper 1.2.5 会传递引入 jsqlparser 1.0，与 MyBatis-Plus 3.5.x 不兼容，排除后由下方显式 4.6 接管 -->
                 <exclusion>
                     <groupId>com.github.jsqlparser</groupId>
                     <artifactId>jsqlparser</artifactId>
@@ -113,7 +116,7 @@
             </exclusions>
         </dependency>
 
-        <!-- 显式引入兼容的 JSqlParser 版本（MyBatis-Plus 3.5.x 分页插件需要 4.x 的 withColumnName API） -->
+        <!-- 显式引入兼容的 JSqlParser 版本（MyBatis-Plus 3.5.x 分页插件需要 4.x） -->
         <dependency>
             <groupId>com.github.jsqlparser</groupId>
             <artifactId>jsqlparser</artifactId>

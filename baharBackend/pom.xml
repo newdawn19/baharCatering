@@ -94,11 +94,17 @@
         <dependency>
             <groupId>com.github.pagehelper</groupId>
             <artifactId>pagehelper-spring-boot-starter</artifactId>
-            <version>1.2.5</version>
+            <!-- 与其余三套工程保持一致（内含 pagehelper 5.3.3，兼容 jsqlparser 4.6）；
+                 1.2.5 会在运行时抛 NoSuchMethodError: PlainSelect.getGroupByColumnReferences() -->
+            <version>1.4.7</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.mybatis</groupId>
                     <artifactId>mybatis</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.github.jsqlparser</groupId>
+                    <artifactId>jsqlparser</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -137,6 +143,12 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+        <!-- Spring Boot 2.5 下 lettuce 连接池必需；缺失会抛
+             NoClassDefFoundError: org/apache/commons/pool2/impl/GenericObjectPoolConfig -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-pool2</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.session</groupId>
