@@ -1,8 +1,8 @@
 spring:
   redis:
     host: ${REDIS_HOST:127.0.0.1}
-    port: ${REDIS_PORT:6379}
-    database: ${REDIS_DB:2}
+    port: 6379
+    database: 2
     timeout: 3000ms
     lettuce:
       pool:
@@ -14,7 +14,7 @@ spring:
       namespace: bahar:food
   datasource:
     # WebSite：https://www.bahar.cn #########################
-    url: "jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:bahar-catering}?useUnicode=true&characterEncoding=UTF8&useSSL=false"
+    url: "jdbc:mysql://${DB_HOST:localhost}:3306/bahar-catering?useUnicode=true&characterEncoding=UTF8&useSSL=false"
     username: "${DB_USER:root}"
     password: "${DB_PASSWORD:changeme}"
     type: "com.zaxxer.hikari.HikariDataSource"
@@ -68,4 +68,4 @@ server:
   port: 8083
 mybatis:
   configuration:
-    log-impl: "${SQL_LOG_IMPL:org.apache.ibatis.logging.slf4j.Slf4jImpl}"
+    log-impl: "org.apache.ibatis.logging.slf4j.Slf4jImpl"
