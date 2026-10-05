@@ -25,4 +25,7 @@ public class RechargeRequest implements Serializable {
 
     @ApiModelProperty(value="类型，1 增加，2 扣减", name="type")
     private Integer type;
+
+    @ApiModelProperty(value="赠送金额，收银端充值时随本金一起入账", name="giftAmount")
+    private BigDecimal giftAmount;
 }
