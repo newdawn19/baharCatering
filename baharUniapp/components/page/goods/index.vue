@@ -56,6 +56,7 @@
                   <view class="detail-price oneline-hide">
                     <text v-if="itemStyle.show.includes('goodsPrice')" class="goods-price f-30 col-m">￥{{ dataItem.price }}</text>
                     <text v-if="itemStyle.show.includes('linePrice') && dataItem.linePrice > 0" class="line-price col-9 f-24">￥{{ dataItem.linePrice }}</text>
+                    <view class="buy-now">去购买</view>
                   </view>
                 </view>
               </block>
@@ -203,6 +204,7 @@
                 left: 0;
                 -o-object-fit: cover;
                 object-fit: cover;
+                border-radius: 16rpx;
               }
               
               .member-tag {
@@ -234,6 +236,19 @@
               .detail-price {
                 .goods-price {
                   margin-right: 8rpx;
+                  color: #f03c3c;
+                  font-size: 34rpx;
+                  font-weight: bold;
+                }
+
+                /* 去购买胶囊按钮 */
+                .buy-now {
+                  color: #fff;
+                  background: $bahar-theme;
+                  font-size: 22rpx;
+                  padding: 6rpx 18rpx;
+                  border-radius: 999rpx;
+                  float: right;
                 }
 
                 .line-price {
@@ -261,12 +276,20 @@
           &.column__2 {
             .goods-item {
               width: 50%;
+              border-radius: 16rpx;
+              overflow: hidden;
+              box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.05);
+              background: #fff;
             }
           }
 
           &.column__3 {
             .goods-item {
               width: 33.33333%;
+              border-radius: 16rpx;
+              overflow: hidden;
+              box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.05);
+              background: #fff;
             }
           }
 
