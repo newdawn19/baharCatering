@@ -1,6 +1,6 @@
 <template>
   <!-- 商品列表 -->
-  <view class="goods-container">
+  <view class="goods-container bahar-card">
       <mescroll-body ref="mescrollRef" :sticky="true" @init="mescrollInit" :down="{ native: true }" @down="downCallback" :up="upOption" @up="upCallback">
       <view class="diy-goods" :style="{ background: itemStyle.background }">
         <view class="goods-list" :class="[`display__${itemStyle.display}`, `column__${itemStyle.column}`]">

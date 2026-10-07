@@ -1,5 +1,5 @@
 <template>
-    <view class="navigation">
+    <view class="navigation bahar-card">
         <view class="nav">
             <view class="item" v-for="item in navigation">
                 <image class="icon" :src="item.iconUrl" @click.stop="goUrl(item.url)"></image>

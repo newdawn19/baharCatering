@@ -1,5 +1,5 @@
 <template>
-    <view class="content">
+    <view class="content bahar-card">
         <view class="entrance">
             <view class="item">
                 <image class="icon" src="/static/nav/store.png" @click="goUrl('oneself')"></image>
