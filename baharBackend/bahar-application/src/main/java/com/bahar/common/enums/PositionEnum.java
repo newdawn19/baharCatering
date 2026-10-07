@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 /**
  * 广告位枚举
  *
- * Created by FSQ
  * CopyRight https://www.bahar.cn
  */
 public enum PositionEnum {

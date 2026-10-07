@@ -10,7 +10,6 @@ import com.bahar.repository.model.MtTableArea;
 /**
  * 桌码区域业务接口
  *
- * Created by FSQ
  * CopyRight https://www.bahar.cn
  */
 public interface TableAreaService extends IService<MtTableArea> {

@@ -17,7 +17,6 @@ import org.springframework.session.data.redis.config.annotation.web.http.EnableR
 /**
  * 配置redis缓存
  *
- * Created by FSQ
  * CopyRight https://www.bahar.cn
  */
 @Configuration

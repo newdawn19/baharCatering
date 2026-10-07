@@ -6,7 +6,6 @@ import com.bahar.framework.exception.BusinessCheckException;
 /**
  * 骑手服务接口
  *
- * Created by FSQ
  * CopyRight https://www.bahar.cn
  */
 public interface RiderService {

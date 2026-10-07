@@ -31,7 +31,6 @@ import java.util.Map;
 /**
  * 桌码管理类controller
  *
- * Created by FSQ
  * CopyRight https://www.bahar.cn
  */
 @Api(tags="管理端-桌码相关接口")

@@ -7,7 +7,6 @@ import lombok.Data;
 /**
  * 桌台详情实体类
  *
- * Created by FSQ
  * CopyRight https://www.bahar.cn
  */
 @Data

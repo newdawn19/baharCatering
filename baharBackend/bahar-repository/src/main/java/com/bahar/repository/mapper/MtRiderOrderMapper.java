@@ -11,7 +11,6 @@ import java.util.Map;
 /**
  * 骑手配送记录 Mapper
  *
- * Created by FSQ
  * CopyRight https://www.bahar.cn
  */
 public interface MtRiderOrderMapper extends BaseMapper<MtRiderOrder> {

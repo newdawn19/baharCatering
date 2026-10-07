@@ -27,7 +27,6 @@ import java.util.Map;
 /**
  * 分销提成邀请记录管理类controller
  *
- * Created by FSQ
  * CopyRight https://www.bahar.cn
  */
 @Api(tags="管理端-分销提成邀请记录相关接口")

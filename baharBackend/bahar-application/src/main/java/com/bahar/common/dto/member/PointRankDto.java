@@ -8,7 +8,6 @@ import java.io.Serializable;
 /**
  * 积分排行DTO
  *
- * Created by FSQ
  * CopyRight https://www.bahar.cn
  */
 @Data

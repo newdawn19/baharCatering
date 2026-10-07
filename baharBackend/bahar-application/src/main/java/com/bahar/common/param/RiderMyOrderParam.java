@@ -7,7 +7,6 @@ import lombok.EqualsAndHashCode;
 /**
  * 骑手-我的配送订单查询参数
  *
- * Created by FSQ
  * CopyRight https://www.bahar.cn
  */
 @Data

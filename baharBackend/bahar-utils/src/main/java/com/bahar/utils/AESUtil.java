@@ -13,7 +13,6 @@
 ///**
 // * AES对称加/解密工具类
 // *
-// * Created by FSQ
 // * CopyRight https://www.bahar.cn
 // */
 //public class AESUtil {

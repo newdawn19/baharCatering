@@ -17,7 +17,6 @@ import java.util.Map;
 /**
  * 桌码业务接口
  *
- * Created by FSQ
  * CopyRight https://www.bahar.cn
  */
 public interface TableService extends IService<MtTable> {

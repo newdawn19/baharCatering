@@ -3,7 +3,6 @@ package com.bahar.common.enums;
 /**
  * 打印机类型枚举
  *
- * Created by FSQ
  * CopyRight https://www.bahar.cn
  */
 public enum PrinterTypeEnum {

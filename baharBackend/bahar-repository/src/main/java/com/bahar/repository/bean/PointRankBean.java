@@ -8,7 +8,6 @@ import lombok.Data;
 /**
  * 积分排行Bean
  *
- * Created by FSQ
  * CopyRight https://www.bahar.cn
  */
 @Data

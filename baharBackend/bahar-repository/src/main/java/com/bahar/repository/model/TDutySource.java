@@ -11,7 +11,6 @@ import lombok.Data;
  * 角色权限实体
  *
  *
- * Created by FSQ
  * CopyRight https://www.bahar.cn
  */
 @Data

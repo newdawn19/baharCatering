@@ -7,7 +7,6 @@ import java.io.Serializable;
 /**
  * 二维码请求参数
  *
- * Created by FSQ
  * CopyRight https://www.bahar.cn
  */
 @Data

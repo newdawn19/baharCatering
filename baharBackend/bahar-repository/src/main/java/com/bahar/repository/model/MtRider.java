@@ -12,7 +12,6 @@ import lombok.Data;
 /**
  * 骑手表
  *
- * Created by FSQ
  * CopyRight https://www.bahar.cn
  */
 @Data

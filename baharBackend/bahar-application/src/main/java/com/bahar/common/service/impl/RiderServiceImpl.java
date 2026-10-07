@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 /**
  * 骑手服务实现类
  *
- * Created by FSQ
  * CopyRight https://www.bahar.cn
  */
 @Service

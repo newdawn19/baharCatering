@@ -9,7 +9,6 @@ import java.util.List;
 /**
  * 桌码 Mapper 接口
  *
- * Created by FSQ
  * CopyRight https://www.bahar.cn
  */
 public interface MtTableMapper extends BaseMapper<MtTable> {

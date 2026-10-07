@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 /**
  * 配送方式枚举
  *
- * Created by FSQ
  * CopyRight https://www.bahar.cn
  */
 public enum DeliverMethodEnum {

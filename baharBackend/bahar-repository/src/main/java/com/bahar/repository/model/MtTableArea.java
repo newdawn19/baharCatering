@@ -12,7 +12,6 @@ import lombok.Data;
 /**
  * 桌码区域实体
  *
- * @Created by FSQ
  * CopyRight https://www.bahar.cn
  */
 @Data

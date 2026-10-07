@@ -48,7 +48,6 @@ import java.util.Map;
 /**
  * 桌码服务接口
  *
- * Created by FSQ
  * CopyRight https://www.bahar.cn
  */
 @Service

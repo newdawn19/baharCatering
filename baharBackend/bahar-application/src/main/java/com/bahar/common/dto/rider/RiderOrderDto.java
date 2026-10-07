@@ -13,7 +13,6 @@ import java.util.List;
 /**
  * 骑手订单 DTO
  *
- * Created by FSQ
  * CopyRight https://www.bahar.cn
  */
 @Data

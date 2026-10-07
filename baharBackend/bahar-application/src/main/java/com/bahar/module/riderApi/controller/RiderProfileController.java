@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 /**
  * 骑手端-个人信息接口
  *
- * Created by FSQ
  * CopyRight https://www.bahar.cn
  */
 @Api(tags = "骑手端-个人信息接口")

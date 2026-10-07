@@ -6,7 +6,6 @@ import com.bahar.repository.model.MtRider;
 /**
  * 骑手 Mapper
  *
- * Created by FSQ
  * CopyRight https://www.bahar.cn
  */
 public interface MtRiderMapper extends BaseMapper<MtRider> {

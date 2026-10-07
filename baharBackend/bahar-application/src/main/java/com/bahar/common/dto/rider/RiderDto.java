@@ -10,7 +10,6 @@ import java.util.Date;
 /**
  * 骑手信息 DTO
  *
- * Created by FSQ
  * CopyRight https://www.bahar.cn
  */
 @Data

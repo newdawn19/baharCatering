@@ -13,7 +13,6 @@ import java.util.List;
 /**
  * 积分业务接口
  *
- * Created by FSQ
  * CopyRight https://www.bahar.cn
  */
 public interface PointService extends IService<MtPoint> {

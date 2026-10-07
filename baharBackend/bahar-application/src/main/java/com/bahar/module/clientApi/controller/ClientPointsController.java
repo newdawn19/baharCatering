@@ -24,7 +24,6 @@ import java.util.List;
 /**
  * 积分相关controller
  *
- * Created by FSQ
  * CopyRight https://www.bahar.cn
  */
 @Api(tags="会员端-积分相关接口")

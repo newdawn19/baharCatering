@@ -11,7 +11,6 @@ import java.util.Map;
 /**
  * 骑手统计 DTO
  *
- * Created by FSQ
  * CopyRight https://www.bahar.cn
  */
 @Data

@@ -9,7 +9,6 @@ import java.math.BigDecimal;
 /**
  * 桌台实体类
  *
- * Created by FSQ
  * CopyRight https://www.bahar.cn
  */
 @Data
