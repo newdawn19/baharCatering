@@ -144,7 +144,10 @@ public class BackendDoConfirmController extends BaseController {
         if (mtUserCoupon.getType().equals(CouponTypeEnum.PRESTORE.getKey()) && StringUtil.isEmpty(amount)) {
             return getFailureResult(201, "储值卡核销金额不能为空");
         }
-        if (!mtUserCoupon.getMerchantId().equals(accountInfo.getMerchantId())) {
+        // 平台方/未绑定商户的账号(merchantId<=0，收银端演示账号就是这种)没有可比较的商户，
+        // 改以卡券所属商户为准，不做商户拦截
+        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0
+                && !mtUserCoupon.getMerchantId().equals(accountInfo.getMerchantId())) {
             return getFailureResult(1004);
         }
 
