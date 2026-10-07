@@ -1,7 +1,7 @@
 <template>
-    <view class="navigation bahar-card">
+    <view class="navigation bahar-card bahar-anim">
         <view class="nav">
-            <view class="item" v-for="item in navigation">
+            <view class="item bahar-press" v-for="item in navigation">
                 <image class="icon" :src="item.iconUrl" @click.stop="goUrl(item.url)"></image>
                 <view class="title">{{ item.name }}</view>
             </view>
@@ -32,9 +32,8 @@ export default {
     margin-bottom: 30rpx;
     border-radius: 10rpx;
     background-color: #ffffff;
-    box-shadow: #666;
     padding: 40rpx 0;
-    border: solid 1rpx #ccc;
+    border: none;
     margin: 0 10rpx 25rpx 10rpx;
     display: flex;
     align-items: center;
@@ -53,9 +52,9 @@ export default {
             height: 50rpx;
             margin: 28rpx;
             padding: 20rpx;
-            border-radius: 50rpx;
-            border: #ccc solid 2rpx;
-            background: #f5f5f5;
+            border-radius: 28rpx;
+            border: none;
+            background: rgba($bahar-theme, 0.08);
         }
 
         .title {
