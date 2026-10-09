@@ -30,11 +30,17 @@
 
 <style lang="scss" scoped>
 .ads {
-    width: 100%;
+    /* 与其它首页卡片同一条边。原来是 width:100% + padding 0 10rpx，
+       容器边缘落在 0~375，比 .bahar-card 的 12~363 外扩一截。
+       width 必须改成 auto：100% 再叠 margin 会横向溢出。 */
+    width: auto;
+    box-sizing: border-box;
     height: 280rpx;
-    padding: 0 10rpx;
+    margin: 0 24rpx 24rpx;
+    padding: 0;
     display: block;
     background: #fff;
+    border-radius: 16rpx;
     .bg {
         width: 100%;
         height: 240rpx;
