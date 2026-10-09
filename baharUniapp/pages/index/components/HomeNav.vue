@@ -1,7 +1,7 @@
 <template>
     <view class="navigation bahar-card bahar-anim">
         <view class="nav">
-            <view class="item bahar-press" v-for="item in navigation">
+            <view class="item bahar-press" v-for="(item, index) in navigation" :key="index">
                 <image class="icon" mode="aspectFit" :src="item.iconUrl" @click.stop="goUrl(item.url)"></image>
                 <view class="title">{{ item.name }}</view>
             </view>

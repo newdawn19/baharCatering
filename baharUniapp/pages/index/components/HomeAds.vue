@@ -15,7 +15,9 @@
         props: {
             ads: {
                 type: Array,
-                default: []
+                // Object/Array 的 default 必须是工厂函数，否则所有实例共享同一个数组引用，
+                // Vue 会报 "Invalid default value for prop"。原来写的是 default: []
+                default: () => []
             }
         },
         methods: {
