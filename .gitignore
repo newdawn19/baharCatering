@@ -4,3 +4,6 @@
 # 本地运行产物（日志目录、WorkBuddy 工作目录）
 logs/
 .codebuddy/
+
+# 本地验证脚本产物（HBuilderX dev server 日志等）
+*.log
