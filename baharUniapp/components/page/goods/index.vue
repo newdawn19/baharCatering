@@ -1,6 +1,9 @@
 <template>
   <!-- 商品列表 -->
   <view class="goods-container bahar-card">
+      <view class="recommend" v-if="list.content.length > 0">
+         <text class="txt">热门商品</text>
+      </view>
       <mescroll-body ref="mescrollRef" :sticky="true" @init="mescrollInit" :down="{ native: true }" @down="downCallback" :up="upOption" @up="upCallback">
       <view class="diy-goods" :style="{ background: itemStyle.background }">
         <view class="goods-list" :class="[`display__${itemStyle.display}`, `column__${itemStyle.column}`]">
@@ -11,10 +14,8 @@
                 <view class="dis-flex">
                   <!-- 商品图片 -->
                   <view class="goods-item_left">
-                    <view class="goods-image">
-                      <image class="image" lazy-load :lazy-load-margin="0" :src="dataItem.logo"></image>
-                      <view class="member-tag" v-if="dataItem.gradeIds">会员专属</view>
-                    </view>
+                    <image class="image" lazy-load :lazy-load-margin="0" :src="dataItem.logo"></image>
+                    <view class="member-tag" v-if="dataItem.gradeIds" style="top:0;left:auto;right:0;padding:4rpx 12rpx;font-size:20rpx;color:#fff;background:linear-gradient(135deg,#d4a843,#b8860b);border-radius:0 0 0 12rpx;z-index:5;">会员专属</view>
                   </view>
                   <view class="goods-item_right">
                     <!-- 商品名称 -->
@@ -42,22 +43,29 @@
               </block>
               <!-- 多列商品 -->
               <block v-else>
-                <!-- 商品图片 -->
-                <view class="goods-image">
-                  <image class="image" lazy-load :lazy-load-margin="0" mode="aspectFill" :src="dataItem.logo"></image>
-                  <view class="member-tag" v-if="dataItem.gradeIds">会员专属</view>
-                </view>
-                <view class="detail">
-                  <!-- 商品标题 -->
-                  <view v-if="itemStyle.show.includes('goodsName')" class="goods-name twoline-hide">
-                    {{ dataItem.name }}
-                  </view>
-                  <!-- 商品价格 -->
-                  <view class="detail-price oneline-hide">
-                    <text v-if="itemStyle.show.includes('goodsPrice')" class="goods-price f-30 col-m">￥{{ dataItem.price }}</text>
-                    <text v-if="itemStyle.show.includes('linePrice') && dataItem.linePrice > 0" class="line-price col-9 f-24">￥{{ dataItem.linePrice }}</text>
-                    <view class="buy-now">去购买</view>
-                  </view>
+                <view class="goods-info">
+                    <!-- 商品图片 -->
+                    <view class="goods-image">
+                      <image class="image" lazy-load :lazy-load-margin="0" mode="aspectFill" :src="dataItem.logo"></image>
+                      <view class="member-tag" v-if="dataItem.gradeIds" style="top:0;left:auto;right:0;padding:4rpx 12rpx;font-size:20rpx;color:#fff;background:linear-gradient(135deg,#d4a843,#b8860b);border-radius:0 0 0 12rpx;z-index:5;">会员专属</view>
+                    </view>
+                    <view class="detail">
+                      <!-- 商品标题 -->
+                      <view v-if="itemStyle.show.includes('goodsName')" class="goods-name twoline-hide">
+                        {{ dataItem.name }}
+                      </view>
+                      <!-- 商品卖点 -->
+                      <view v-if="itemStyle.show.includes('sellingPoint')" class="desc-selling_point dis-flex">
+                        <text class="oneline-hide">{{ dataItem.salePoint ? dataItem.salePoint : '' }}</text>
+                      </view>
+                      <!-- 商品价格 -->
+                      <view class="detail-price oneline-hide">
+                        <text v-if="itemStyle.show.includes('goodsPrice')" class="goods-price f-30 col-m">￥{{ dataItem.price }}</text>
+                        <text v-if="itemStyle.show.includes('linePrice') && dataItem.linePrice > 0" class="line-price col-9 f-24">￥{{ dataItem.linePrice }}</text>
+                        <view class="buy-now">去购买</view>
+                        <text v-if="itemStyle.show.includes('goodsSales')" class="sales">已售{{ dataItem.initSale ? dataItem.initSale : 0 }}件</text>
+                      </view>
+                    </view>
                 </view>
               </block>
             </view>
@@ -156,7 +164,7 @@
        */
       getGoodsList(pageNo) {
         const app = this
-        console.log('pageNo==', pageNo);
+        console.log('pageNo=====', pageNo);
         const param = { page: pageNo, pageSize: pageSize }
         return new Promise((resolve, reject) => {
           GoodsApi.search(param)
@@ -174,56 +182,77 @@
 </script>
 <style lang="scss" scoped>
   .goods-container {
+      .recommend {
+        font-size: 30rpx;
+        font-weight: bold;
+        margin-left: 20rpx;
+        margin-right: 20rpx;
+        padding: 20rpx 8rpx 20rpx 8rpx;
+        background: transparent;
+        .txt {
+          border-left: solid $bahar-theme 10rpx;
+          padding-left: 10rpx;
+        }
+      }
       .diy-goods {
         .goods-list {
-          padding: 4rpx;
+          padding: 0rpx 12rpx 12rpx 12rpx;
           box-sizing: border-box;
           .goods-item {
             box-sizing: border-box;
-            padding: 6rpx;
-
-            .goods-image {
-              position: relative;
-              width: 100%;
-              height: 0;
-              padding-bottom: 100%;
-              overflow: hidden;
-              background: #fff;
-
-              &:after {
-                content: '';
-                display: block;
-                margin-top: 100%;
-              }
-
-              .image {
-                position: absolute;
-                width: 100%;
-                height: 100%;
-                top: 0;
-                left: 0;
-                -o-object-fit: cover;
-                object-fit: cover;
+            padding: 0rpx 12rpx 12rpx 12rpx;
+            background: transparent;
+            .goods-info {
+                background: #ffffff;
                 border-radius: 16rpx;
-              }
-              
-              .member-tag {
-                position: absolute;
-                top: 0;
-                right: 0;
-                padding: 4rpx 12rpx;
-                font-size: 20rpx;
-                color: #fff;
-                background: linear-gradient(135deg, #d4a843, #b8860b);
-                border-radius: 0 0 0 12rpx;
-                z-index: 2;
-              }
+                box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.05);
+                padding: 2px;
+                overflow: hidden;
+                .goods-image {
+                  position: relative;
+                  width: 100%;
+                  height: 0;
+                  padding-bottom: 100%;
+                  overflow: hidden;
+                  text-align: center;
+                  &:after {
+                    content: '';
+                    display: block;
+                    margin-top: 100%;
+                  }
+                  .image {
+                    position: absolute;
+                    box-sizing: border-box;
+                    padding: 10rpx;
+                    width: 100%;
+                    height: 100%;
+                    top: 0;
+                    left: 0;
+                    -o-object-fit: cover;
+                    object-fit: cover;
+                    border-radius: 16rpx;
+                  }
+                  .member-tag {
+                    position: absolute;
+                    top: 0;
+                    right: 0;
+                    padding: 4rpx 12rpx;
+                    font-size: 20rpx;
+                    color: #fff;
+                    background: linear-gradient(135deg, #d4a843, #b8860b);
+                    border-radius: 0 0 0 12rpx;
+                    z-index: 5;
+                  }
+                }
             }
 
             .detail {
               padding: 8rpx;
-              background: #fff;
-
+              background: #ffffff;
+              border-bottom-left-radius: 16rpx;
+              border-bottom-right-radius: 16rpx;
+              overflow: hidden;
+              height: 180rpx;
               .goods-name {
                 height: 64rpx;
                 line-height: 1.3;
@@ -276,20 +305,27 @@
           &.column__2 {
             .goods-item {
               width: 50%;
-              border-radius: 16rpx;
+            }
+            .desc-selling_point {
+              min-height: 40rpx;
+              line-height: 40rpx;
+              max-width: 400rpx;
+              font-size: 24rpx;
+              color: #e49a3d;
               overflow: hidden;
-              box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.05);
-              background: #fff;
+            }
+            
+            .sales {
+              color: #999;
+              font-size: 24rpx;
+              margin-top: 10rpx;
+              float: right;
             }
           }
 
           &.column__3 {
             .goods-item {
               width: 33.33333%;
-              border-radius: 16rpx;
-              overflow: hidden;
-              box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.05);
-              background: #fff;
             }
           }
 
@@ -302,34 +338,37 @@
               box-sizing: border-box;
               background: #fff;
               line-height: 1.6;
-              border: 1rpx #F5f5f5 solid;
               &:last-child {
                 margin-bottom: 0;
+              }
+              &:first-child {
+                  margin-top: 8rpx;
               }
             }
 
             .goods-item_left {
+              position: relative;
               display: flex;
               width: 40%;
               background: #fff;
               align-items: center;
-              
-              .goods-image {
-                position: relative;
-                width: auto;
-                height: auto;
-                padding-bottom: 0;
-                overflow: visible;
-                &:after { display: none; }
-                
-                .image {
-                  display: block;
-                  width: 220rpx;
-                  height: 200rpx;
-                  border-radius: 10rpx;
-                  border: 1rpx #cccccc solid;
-                  position: static;
-                }
+
+              .image {
+                display: block;
+                width: 220rpx;
+                height: 200rpx;
+                border-radius: 10rpx;
+              }
+              .member-tag {
+                position: absolute;
+                top: 0;
+                right: 0;
+                padding: 4rpx 12rpx;
+                font-size: 20rpx;
+                color: #fff;
+                background: linear-gradient(135deg, #d4a843, #b8860b);
+                border-radius: 0 0 0 12rpx;
+                z-index: 5;
               }
             }
 
@@ -371,7 +410,7 @@
 
               .price_x {
                 margin-right: 16rpx;
-                color: #f03c3c;
+                color: #fa5151;
                 font-size: 33rpx;
                 font-weight: bold;
               }

@@ -43,7 +43,8 @@ export default {
     align-items: center;
     justify-content: center;
     border: solid 1rpx #ccc;
-    margin: 10rpx 10rpx 25rpx 10rpx;
+    /* 与首页其它卡片同一条边：原来是 10rpx，比 .bahar-card 的 24rpx 窄一截 */
+    margin: 0 24rpx 24rpx 24rpx;
     .item {
         flex: 1;
         display: flex;

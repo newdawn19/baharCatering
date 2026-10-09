@@ -1,9 +1,13 @@
 <template>
   <view class="container">
-      <view class="bahar-gradient-header">
-        <text style="font-size:36rpx;font-weight:600;">欢迎光临</text>
-      </view>
+      <!-- 装饰头已移除：它叠在吸顶区之上占掉首屏 175px（约 26%），竞品没有这块。
+           样式类 .bahar-gradient-header 保留在 App.vue，其它页面照用。 -->
       <empty v-if="!storeInfo" :isLoading="isLoading" tips="数据加载中..."></empty>
+      <!-- 门店信息 + 搜索框作为一个整体吸顶固定（餐饮原首页没有这两块，按竞品结构补上） -->
+      <view class="index-sticky-header" v-if="storeInfo">
+        <Location inline :storeInfo="storeInfo" :tableInfo="tableInfo"/>
+        <Search inline tips="请输入搜索关键字..." @event="$navTo('pages/search/index')"/>
+      </view>
       <block>
           <HomeBanner v-if="storeInfo" :banners="banner"/>
       </block>
@@ -28,7 +32,13 @@
           <HomeService v-if="storeInfo" :data="[]"/>
       </block>
       <block>
-          <HomeNav v-if="storeInfo" :navigation="navigation"/>
+          <HomeNav v-if="storeInfo && navigation.length > 0" :navigation="navigation"/>
+      </block>
+      <block v-if="storeInfo && coupons.length">
+          <view class="bahar-card index-coupon-card">
+            <view class="index-section-title"><text class="txt">优惠专区</text></view>
+            <Coupon :itemStyle="options.couponStyle" :dataList="coupons"/>
+          </view>
       </block>
       <block>
           <HomeAds v-if="storeInfo" :ads="ads"/>
@@ -38,6 +48,9 @@
 
 <script>
   import { setCartTabBadge, showMessage } from '@/utils/app'
+  import Location from '@/components/page/location'
+  import Search from '@/components/search'
+  import Coupon from '@/components/page/coupon'
   import Empty from '@/components/empty'
   import HomeBanner from "./components/HomeBanner.vue"
   import HomeService from "./components/HomeService.vue"
@@ -47,14 +60,18 @@
   import * as settingApi from '@/api/setting'
   import * as Api from '@/api/page'
   import * as UserApi from '@/api/user'
+  import * as couponApi from '@/api/coupon'
   import MescrollCompMixin from "@/components/mescroll-uni/mixins/mescroll-comp.js";
   import config from '@/config'
 
   const App = getApp()
-  
+
   export default {
     mixins: [MescrollCompMixin],
     components: {
+       Location,
+       Search,
+       Coupon,
        Empty,
        HomeBanner,
        HomeService,
@@ -64,9 +81,19 @@
     },
     data() {
       return {
+        options: {
+            "couponStyle": {
+                "background": "transparent",
+                "display": "list",
+                "column": 1
+            }
+        },
         banner: [],
         ads: [],
+        coupons: [],
         storeInfo: null,
+        // 餐饮行业化：扫码点餐后桌码要一直顶在门店条上
+        tableInfo: null,
         userInfo: {},
         isReflash: false,
         isLoading: false,
@@ -98,6 +125,7 @@
       const app = this;
       showMessage();
       setCartTabBadge();
+      app.onSyncTableInfo();
       app.onGetStoreInfo();
       app.getUserInfo();
       uni.getLocation({
@@ -114,7 +142,7 @@
     },
 
     methods: {
-        
+
         /**
          * 加载页面数据
          * @param {Object} callback
@@ -131,7 +159,7 @@
             })
             .finally(() => callback && callback())
         },
-        
+
         /**
          * 获取用户信息
          * */
@@ -142,7 +170,32 @@
               app.userInfo = result.data.userInfo ? result.data.userInfo : {};
             })
         },
-        
+
+        /**
+         * 加载首页优惠券（领券中心前几条，拿不到就整块不显示）
+         */
+        getCouponList() {
+          const app = this;
+          const param = { sortType: 'all', sortPrice: 0, type: 'C', needPoint: '0', name: '', pageNumber: 1 }
+          couponApi.list(param, { isPrompt: false, load: false })
+            .then(result => {
+                 const page = (result.data && result.data.coupon) ? result.data.coupon : {}
+                 app.coupons = page.content || []
+            })
+            .catch(() => {
+                 app.coupons = []
+            })
+        },
+
+        /**
+         * 同步桌码到门店条（扫码点餐后 tableId 会写进 storage）
+         */
+        onSyncTableInfo() {
+          const app = this;
+          const tableId = uni.getStorageSync('tableId');
+          app.tableInfo = tableId && parseInt(tableId) > 0 ? { code: parseInt(tableId) } : null;
+        },
+
         /**
          * 下拉刷新
          */
@@ -153,7 +206,7 @@
              uni.stopPullDownRefresh()
           })
         },
-        
+
         /**
          * 扫码点餐
          */
@@ -247,6 +300,7 @@
             }
             if (tableId > 0) {
                 uni.setStorageSync('tableId', tableId);
+                app.tableInfo = { code: tableId };
                 app.$navTo('pages/category/index', { tableId: tableId });
             } else {
                 uni.showToast({
@@ -323,6 +377,7 @@
                          app.getPageData();
                      }
                  }
+                 app.getCouponList();
              })
          }
     },
@@ -355,15 +410,45 @@
   }
 </script>
 <style lang="scss" scoped>
+    /* 门店信息 + 搜索框整体吸顶。
+       子组件内部默认 fixed（不占文档流，且未设 top 时按静态位置锚定，
+       前置内容高度一变就跑位），所以首页把两者都切到 inline 模式，由本容器统一吸顶。
+       top 用 --window-top 兼容 H5 自带的导航栏高度，小程序端该变量不存在时回退 0。 */
+    .index-sticky-header {
+      position: sticky;
+      top: var(--window-top, 0);
+      z-index: 100;
+      /* 沿用品牌主色（与门店条同一渐变），避免吸顶后露出大白块 */
+      background-image: linear-gradient(to bottom, $bahar-theme, $bahar-theme);
+    }
+
+    .index-section-title {
+      font-size: 30rpx;
+      font-weight: bold;
+      padding: 20rpx 20rpx 12rpx;
+      .txt {
+        border-left: solid $bahar-theme 10rpx;
+        padding-left: 10rpx;
+      }
+    }
+
+    /* 优惠券区做成与四宫格/商品区一致的卡片 */
+    .index-coupon-card {
+      padding: 0 0 12rpx 0;
+    }
+
     .scan-entry {
         display: flex;
         align-items: center;
-        margin: 0 10rpx 25rpx 10rpx;
+        /* 与首页其它卡片同一条边：原来是 10rpx，比 .bahar-card 的 24rpx 窄一截 */
+        margin: 24rpx;
         padding: 30rpx;
-        background: linear-gradient(135deg, $bahar-theme, #ff9f7d);
+        /* 统一强调色：原来是「主色 → 橙 #ff9f7d」的渐变 + 橙色投影，
+           会在首页多出一套橙。改为主色深浅渐变，橙色只保留给促销文字用。 */
+        background: linear-gradient(135deg, $bahar-theme, #00c9c9);
         border-radius: 16rpx;
-        box-shadow: 0 4rpx 16rpx rgba(255, 100, 50, 0.25);
-        
+        box-shadow: 0 4rpx 16rpx rgba(0, 172, 172, 0.25);
+
         .scan-icon {
             width: 80rpx;
             height: 80rpx;
@@ -374,33 +459,33 @@
             justify-content: center;
             margin-right: 24rpx;
             flex-shrink: 0;
-            
+
             .iconfont {
                 font-size: 44rpx;
                 color: #fff;
             }
         }
-        
+
         .scan-text {
             flex: 1;
-            
+
             .scan-title {
                 font-size: 32rpx;
                 font-weight: bold;
                 color: #fff;
             }
-            
+
             .scan-desc {
                 font-size: 24rpx;
                 color: rgba(255, 255, 255, 0.8);
                 margin-top: 4rpx;
             }
         }
-        
+
         .scan-arrow {
             flex-shrink: 0;
             margin-left: 16rpx;
-            
+
             .iconfont {
                 font-size: 32rpx;
                 color: rgba(255, 255, 255, 0.6);

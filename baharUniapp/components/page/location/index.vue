@@ -1,6 +1,6 @@
 <template>
   <!-- 定位店铺 -->
-  <view class="main-loc">
+  <view class="main-loc" :class="{ 'main-loc--inline': inline }">
       <view v-if="storeInfo.name" class="diy-location">
         <view class="inner" @click="onTargetLocation">
           <view class="location-input">
@@ -9,6 +9,7 @@
                <text class="switch" v-if="storeInfo.single == 'N'">[切换店铺]</text>
                <text class="address" v-if="storeInfo.address"><text class="location-icon iconfont icon-dingwei"></text>{{ storeInfo.address }}</text>
             </text>
+            <!-- 餐饮行业化：桌码。扫码点餐后要一直把桌号顶在门店条上，不能随版本同步丢掉 -->
             <text class="table" v-if="tableInfo">
                 <text class="code">桌码 : {{ tableInfo.code ? tableInfo.code : '-' }}</text>
             </text>
@@ -28,7 +29,16 @@
     props: {
       itemStyle: Object,
       storeInfo: Object,
-      tableInfo: Object
+      tableInfo: Object,
+      /**
+       * 是否由外层容器负责定位。
+       * 默认 false：门店条自己 fixed 悬浮（不占文档流）；
+       * 传 true：回到普通文档流，与搜索框一起由外层吸顶容器统一吸顶。
+       */
+      inline: {
+        type: Boolean,
+        default: false
+      }
     },
 
     /**
@@ -56,10 +66,7 @@
   color: #ffffff;
   .diy-location {
     background: linear-gradient(to bottom, $bahar-theme, $bahar-theme);
-    padding: 3rpx 10rpx 10rpx 10rpx;
-    /* #ifdef H5 */
-    padding-top: 15rpx;
-    /* #endif */
+    padding: 3rpx 20rpx 16rpx 20rpx;
     position: fixed;
     z-index: 99999;
     width: 100%;
@@ -80,13 +87,11 @@
     color: #484848;
     padding-left: 10rpx;
   }
-  
+
   .store {
-      height: 120rpx;
-      float: left;
       .name {
           font-size: 32rpx;
-          font-weight: bold;
+          font-weight: 700;
           color: #ffffff;
       }
       .switch {
@@ -104,7 +109,8 @@
           .location-icon {
             margin-right: 4rpx;
             font-size: 24rpx;
-            color: #ffffff;
+            /* 定位钉：品牌红，与主色背景区分开 */
+            color: #f03c3c;
             font-weight: bold;
           }
       }
@@ -119,5 +125,13 @@
       font-size: 20rpx;
   }
 }
-  
+
+/* 首页方案：门店条并入 sticky 容器，由容器统一吸顶 */
+.main-loc.main-loc--inline {
+  height: auto;
+  .diy-location {
+    position: static;
+    width: auto;
+  }
+}
 </style>
