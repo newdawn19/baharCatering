@@ -34,14 +34,19 @@
       <block>
           <HomeNav v-if="storeInfo && navigation.length > 0" :navigation="navigation"/>
       </block>
+      <!-- 通栏广告图（餐饮端后端按 position=m_home_ads 单独返回 ads） -->
+      <block>
+          <HomeAds v-if="storeInfo && ads.length" :ads="ads"/>
+      </block>
       <block v-if="storeInfo && coupons.length">
           <view class="bahar-card index-coupon-card">
             <view class="index-section-title"><text class="txt">优惠专区</text></view>
             <Coupon :itemStyle="options.couponStyle" :dataList="coupons"/>
           </view>
       </block>
+      <!-- 热门商品（双列） -->
       <block>
-          <HomeAds v-if="storeInfo" :ads="ads"/>
+          <Goods v-if="storeInfo" :itemStyle="options.goodsStyle" :isReflash="isReflash" ref="mescrollItem" :params="options.goodsParams"/>
       </block>
   </view>
 </template>
@@ -51,6 +56,7 @@
   import Location from '@/components/page/location'
   import Search from '@/components/search'
   import Coupon from '@/components/page/coupon'
+  import Goods from '@/components/page/goods'
   import Empty from '@/components/empty'
   import HomeBanner from "./components/HomeBanner.vue"
   import HomeService from "./components/HomeService.vue"
@@ -72,6 +78,7 @@
        Location,
        Search,
        Coupon,
+       Goods,
        Empty,
        HomeBanner,
        HomeService,
@@ -82,10 +89,23 @@
     data() {
       return {
         options: {
-            "couponStyle": {
-                "background": "transparent",
+            "goodsStyle": {
+                "background": "#F6F6F6",
                 "display": "list",
-                "column": 1
+                // 双列网格（对齐竞品当前首页的商品区形态）
+                "column": 2,
+                "show": ["goodsName", "goodsPrice", "linePrice", "goodsSales"]
+            },
+            "goodsParams": {
+                "source": "auto",
+                "auto": {
+                    "category": 0,
+                    "goodsSort": "all",
+                    "showNum": 40
+                }
+            },
+            "couponStyle": {
+                "background": "transparent"
             }
         },
         banner: [],
@@ -180,7 +200,12 @@
           couponApi.list(param, { isPrompt: false, load: false })
             .then(result => {
                  const page = (result.data && result.data.coupon) ? result.data.coupon : {}
-                 app.coupons = page.content || []
+                 const list = page.content ? page.content : []
+                 // 面额为 0 的券显示不出「¥金额」，首页只挑有面额的，按面额从大到小
+                 app.coupons = list
+                     .filter(item => Number(item.amount) > 0)
+                     .sort((a, b) => Number(b.amount) - Number(a.amount))
+                     .slice(0, 6)
             })
             .catch(() => {
                  app.coupons = []

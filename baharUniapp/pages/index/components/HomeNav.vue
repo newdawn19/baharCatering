@@ -1,9 +1,18 @@
 <template>
+    <!-- 餐饮首页四宫格。结构/数值与 components/page/navBar 对齐，
+         保证四套会员端首页的四宫格是同一形态（图标 + 主标题 + 副标题）。 -->
     <view class="navigation bahar-card bahar-anim">
-        <view class="nav">
-            <view class="item bahar-press" v-for="(item, index) in navigation" :key="index">
-                <image class="icon" mode="aspectFit" :src="item.iconUrl" @click.stop="goUrl(item.url)"></image>
-                <view class="title">{{ item.name }}</view>
+        <view class="nav-rows">
+            <view class="item-nav" v-for="(item, index) in navigation" :key="index">
+                <view class="nav-to bahar-press" @click.stop="goUrl(item.url)">
+                    <view class="item-image">
+                        <image class="icon" mode="aspectFit" :src="item.iconUrl"></image>
+                    </view>
+                    <view class="item-text">
+                        <view class="text">{{ item.name }}</view>
+                        <view class="tip">{{ item.tips ? item.tips : '' }}</view>
+                    </view>
+                </view>
             </view>
         </view>
     </view>
@@ -14,7 +23,7 @@ export default {
     props: {
         navigation: {
             type: Array,
-            default: []
+            default: () => []
         }
     },
     methods: {
@@ -26,57 +35,79 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.nav {
-    position: relative;
-    /* 外边距由 .bahar-card 统一给 24rpx，这里不能再叠一层 10rpx，
-       否则四宫格会比下方优惠券卡/广告卡窄 14rpx。 */
-    margin: 0;
-    padding: 24rpx 0;
-    border-radius: 10rpx;
-    background-color: #ffffff;
-    border: none;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
+/* 外框：覆盖 .bahar-card 的 24rpx 内边距，改为 6rpx，
+   与 components/page/navBar 的内卡尺寸一致（外卡边距仍是 24rpx）。 */
+.navigation {
+    padding: 6rpx;
+    border-radius: 20rpx;
+    border: 1rpx solid #e6e6e6;
+    box-sizing: border-box;
 
-    .item {
-        /* 一行放不下时自动换行，不再把图标挤成一条 */
-        flex: 0 0 25%;
-        box-sizing: border-box;
+    .nav-rows {
         display: flex;
-        flex-direction: column;
-        justify-content: center;
+        flex-wrap: wrap;
         align-items: center;
-        position: relative;
+        justify-content: center;
 
-        .icon {
-            width: 56rpx;
-            height: 56rpx;
-            margin: 16rpx auto 8rpx;
-            padding: 16rpx;
-            box-sizing: content-box;
-            border-radius: 28rpx;
-            border: none;
-            background: rgba($bahar-theme, 0.08);
-        }
+        .item-nav {
+            /* 一行 4 格，放不下自动换行 */
+            flex: 0 0 25%;
+            box-sizing: border-box;
+            padding: 2rpx;
+            text-align: center;
 
-        .title {
-            font-size: 24rpx;
-            color: #333;
-            font-weight: 600;
-            padding: 0 4rpx;
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-        }
+            .nav-to {
+                margin: 0;
+                padding: 16rpx 8rpx 12rpx 8rpx;
+                border-radius: 12rpx;
+                min-height: 120rpx;
+                box-sizing: border-box;
+                background: linear-gradient(to bottom, #ffffff 0%, #f5f5f5 100%);
+                border: 1rpx solid #e5e5e5;
+                transition: transform 0.15s ease, background 0.15s ease;
+            }
+            .nav-to:active {
+                transform: scale(0.96);
+                background: #f0f5f5;
+            }
 
-        .content {
-            font-size: 20rpx;
-            color: #666;
-            font-weight: 400;
+            .item-image {
+                margin: 0 auto;
+                font-size: 0;
+                width: 72rpx;
+                height: 72rpx;
+                box-sizing: border-box;
+
+                .icon {
+                    width: 72rpx;
+                    height: 72rpx;
+                    border-radius: 16rpx;
+                }
+            }
+
+            .item-text {
+                padding: 0 4rpx;
+
+                .text {
+                    font-size: 24rpx;
+                    color: #333;
+                    font-weight: 600;
+                    overflow: hidden;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                }
+
+                .tip {
+                    font-size: 20rpx;
+                    margin-top: 4rpx;
+                    color: #333;
+                    opacity: 0.8;
+                    overflow: hidden;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                }
+            }
         }
     }
 }
-
 </style>
